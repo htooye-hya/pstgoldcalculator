@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<title>PST ရွှေတွက်ချက်ကိရိယာ</title>
+<meta name="theme-color" content="#c9962c" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Myanmar:wght@400;500;600;700&family=Noto+Serif+Myanmar:wght@600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #141110; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Runtime libraries: jsDelivr primary, fallback CDN secondary -->
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script>window.React || document.write('<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin="anonymous"><\/script>');</script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script>window.ReactDOM || document.write('<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin="anonymous"><\/script>');</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script>window.firebase || document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"><\/script>');</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>(window.firebase && firebase.auth) || document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js"><\/script>');</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>(window.firebase && firebase.firestore) || document.write('<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"><\/script>');</script>
+
+<script>
+  window.firebaseConfig = {
+    apiKey: "AIzaSyAVp-QqHLuoCurx8g4nFzunNqj9C0aWs1Y",
+    authDomain: "pst-gold-calculator-2026-mm.firebaseapp.com",
+    projectId: "pst-gold-calculator-2026-mm",
+    storageBucket: "pst-gold-calculator-2026-mm.firebasestorage.app",
+    messagingSenderId: "510580723556",
+    appId: "1:510580723556:web:a1bf9266c6f9acdf25b471"
+  };
+
+  window.db = null;
+  window.firestoreStartupError = null;
+  window.runtimeStartupError = null;
+
+  try {
+    if (!window.firebase) throw new Error("Firebase library မတက်လာပါ။");
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
+    if (typeof firebase.auth !== "function") throw new Error("Firebase Authentication library မတက်လာပါ။");
+    if (typeof firebase.firestore !== "function") throw new Error("Cloud Firestore library မတက်လာပါ။");
+    window.db = firebase.firestore();
+  } catch (err) {
+    window.firestoreStartupError = err;
+    window.runtimeStartupError = err;
+  }
+</script>
+
+<script>
+(function () {
+  const rootElement = document.getElementById("root");
+
+  function showStartupError(error) {
+    const message = error && error.message ? error.message : String(error || "Unknown error");
+    rootElement.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#141110;padding:20px;font-family:Arial,sans-serif;color:#f4edd9"><div style="width:100%;max-width:460px;border:1px solid #3a3327;border-radius:16px;background:#181410;padding:22px;line-height:1.7"><b style="color:#c9962c;font-size:18px">App စတင်မှု မအောင်မြင်ပါ</b><div style="margin-top:10px;color:#d98a63;overflow-wrap:anywhere">' + message.replace(/[&<>"']/g, function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];}) + '</div><div style="margin-top:12px;font-size:13px;color:#b3a891">စာမျက်နှာကို Refresh လုပ်ပါ။ မရသေးလျှင် ဒီ error စာသားကို screenshot ပို့ပါ။</div></div></div>';
+  }
+
+  const missing = [];
+  if (!window.React) missing.push("React");
+  if (!window.ReactDOM) missing.push("ReactDOM");
+  if (!window.firebase) missing.push("Firebase App");
+  if (!window.firebase || typeof firebase.auth !== "function") missing.push("Firebase Auth");
+  if (!window.firebase || typeof firebase.firestore !== "function") missing.push("Cloud Firestore");
+
+  if (missing.length) {
+    showStartupError(new Error("မတက်လာသော library: " + missing.join(", ")));
+    return;
+  }
+  if (window.runtimeStartupError) {
+    showStartupError(window.runtimeStartupError);
+    return;
+  }
+
+  try {
+    const { useState, useMemo } = React;
+    // ---- theme -------------------------------------------------------------
+    const C = {
+        bg: "#141110",
+        panel: "#181410",
+        panelBorder: "#3a3327",
+        fieldBg: "#211c14",
+        fieldBorder: "#463d2c",
+        fieldBorderFocus: "#c9962c",
+        cream: "#f4edd9",
+        mutedText: "#b3a891",
+        dimText: "#8a8071",
+        faintText: "#6b6252",
+        gold: "#c9962c",
+        goldSoft: "#c9962c33",
+        danger: "#d98a63",
+    };
+    // ---- core unit math -------------------------------------------------
+    const toPel = (kyat, pel, yway) => (Number(kyat) || 0) * 16 + (Number(pel) || 0) + (Number(yway) || 0) / 8;
+    const fromPel = (totalPel) => {
+        const safe = Math.max(0, totalPel || 0);
+        const kyat = Math.floor(safe / 16);
+        const remainder = safe - kyat * 16;
+        const pel = Math.floor(remainder);
+        const yway = Math.round((remainder - pel) * 8 * 100) / 100;
+        return { kyat, pel, yway };
+    };
+    const fmt = (n, d = 2) => (Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d,
+    });
+    const WeightLine = ({ kyat, pel, yway }) => (React.createElement("span", null,
+        React.createElement("b", null, fmt(kyat, 0)),
+        " \u1000\u103B\u1015\u103A ",
+        React.createElement("b", null, fmt(pel, 0)),
+        " \u1015\u1032 ",
+        React.createElement("b", null, fmt(yway)),
+        " \u101B\u103D\u1031\u1038"));
+    // ---- shared field components -----------------------------------------
+    const Label = ({ children }) => (React.createElement("span", { style: { fontSize: 11, letterSpacing: 0.5, color: C.mutedText, textTransform: "uppercase" } }, children));
+    const NumberField = ({ label, value, onChange, suffix, step = "any" }) => {
+        const [focused, setFocused] = useState(false);
+        return (React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+            React.createElement(Label, null, label),
+            React.createElement("div", { style: {
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: 10,
+                    border: `1px solid ${focused ? C.fieldBorderFocus : C.fieldBorder}`,
+                    background: C.fieldBg,
+                    transition: "border-color 0.15s",
+                } },
+                React.createElement("input", { type: "number", inputMode: "decimal", step: step, value: value, onFocus: () => setFocused(true), onBlur: () => setFocused(false), onChange: (e) => onChange(e.target.value), style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "10px 12px", color: C.cream, fontSize: 15 }, placeholder: "0" }),
+                suffix && (React.createElement("span", { style: { paddingRight: 12, fontSize: 13, color: C.dimText, whiteSpace: "nowrap" } }, suffix)))));
+    };
+    const WeightInputs = ({ k, p, y, setK, setP, setY }) => (React.createElement("div", { className: "grid3" },
+        React.createElement(NumberField, { label: "\u1000\u103B\u1015\u103A", value: k, onChange: setK }),
+        React.createElement(NumberField, { label: "\u1015\u1032", value: p, onChange: setP }),
+        React.createElement(NumberField, { label: "\u101B\u103D\u1031\u1038", value: y, onChange: setY })));
+    const PuritySelect = ({ label, value, onChange }) => {
+        const [focused, setFocused] = useState(false);
+        return (React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+            React.createElement(Label, null, label),
+            React.createElement("div", { style: { display: "flex", alignItems: "center", borderRadius: 10, border: `1px solid ${focused ? C.fieldBorderFocus : C.fieldBorder}`, background: C.fieldBg } },
+                React.createElement("input", { type: "number", inputMode: "decimal", step: "0.1", min: "1", max: "16", value: value, onFocus: () => setFocused(true), onBlur: () => setFocused(false), onChange: (e) => onChange(e.target.value), style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "10px 12px", color: C.cream, fontSize: 15 } }),
+                React.createElement("span", { style: { paddingRight: 12, fontSize: 13, color: C.dimText, whiteSpace: "nowrap" } }, "/ \u1041\u1046 \u1015\u1032\u101B\u100A\u103A"))));
+    };
+    const ResultCard = ({ title, children, accent }) => (React.createElement("div", { style: { borderRadius: 14, padding: 16, border: `1px solid ${accent || C.goldSoft}`, background: "linear-gradient(155deg, #2a2416, #201b12)" } },
+        React.createElement("div", { style: { fontSize: 11, textTransform: "uppercase", letterSpacing: 1.5, color: C.gold, marginBottom: 8 } }, title),
+        React.createElement("div", { style: { color: C.cream, lineHeight: 1.6, fontSize: 15 } }, children)));
+    const Divider = () => React.createElement("div", { style: { height: 1, background: C.panelBorder, margin: "18px 0" } });
+    const Hint = ({ children }) => React.createElement("p", { style: { fontSize: 13, color: C.faintText } }, children);
+    const Note = ({ children }) => React.createElement("p", { style: { fontSize: 11, color: C.faintText, marginTop: 4 } }, children);
+    const ScaleMark = () => (React.createElement("svg", { viewBox: "0 0 64 40", width: 56, height: 35, fill: "none" },
+        React.createElement("line", { x1: "32", y1: "2", x2: "32", y2: "10", stroke: C.gold, strokeWidth: "1.4" }),
+        React.createElement("line", { x1: "8", y1: "10", x2: "56", y2: "10", stroke: C.gold, strokeWidth: "1.4" }),
+        React.createElement("line", { x1: "8", y1: "10", x2: "4", y2: "24", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("line", { x1: "8", y1: "10", x2: "12", y2: "24", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("line", { x1: "56", y1: "10", x2: "52", y2: "24", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("line", { x1: "56", y1: "10", x2: "60", y2: "24", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("path", { d: "M2 24a6 6 0 0 0 12 0z", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("path", { d: "M50 24a6 6 0 0 0 12 0z", stroke: C.gold, strokeWidth: "1.1" }),
+        React.createElement("line", { x1: "32", y1: "10", x2: "32", y2: "34", stroke: C.gold, strokeWidth: "1.4" }),
+        React.createElement("line", { x1: "24", y1: "34", x2: "40", y2: "34", stroke: C.gold, strokeWidth: "1.4" })));
+    // =========================================================================
+    // TAB 1 — weight add / subtract calculator
+    // =========================================================================
+    function WeightAddSubtract() {
+        const [ak, setAk] = useState("0");
+        const [ap, setAp] = useState("0");
+        const [ay, setAy] = useState("0");
+        const [bk, setBk] = useState("0");
+        const [bp, setBp] = useState("0");
+        const [by, setBy] = useState("0");
+        const [op, setOp] = useState("add");
+        const A = toPel(ak, ap, ay);
+        const B = toPel(bk, bp, by);
+        const total = op === "add" ? A + B : A - B;
+        const isNegative = total < 0;
+        return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+            React.createElement(Hint, null, "\u101B\u103D\u103E\u1031\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A \u1014\u103E\u1005\u103A\u1001\u102F\u1000\u102D\u102F \u1000\u103B\u1015\u103A/\u1015\u1032/\u101B\u103D\u1031\u1038 \u1014\u103E\u102F\u1014\u103A\u1038\u1016\u103C\u1004\u1037\u103A \u1021\u1015\u1031\u102B\u1004\u103A\u1038 (\u101E\u102D\u102F\u1037) \u1021\u1014\u103E\u102F\u1010\u103A \u101C\u102F\u1015\u103A\u1015\u102B\u104B \u1041 \u1000\u103B\u1015\u103A = \u1041\u1046 \u1015\u1032 \u2022 \u1041 \u1015\u1032 = \u1048 \u101B\u103D\u1031\u1038"),
+            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                React.createElement(Label, null, "\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A (\u1000)"),
+                React.createElement(WeightInputs, { k: ak, p: ap, y: ay, setK: setAk, setP: setAp, setY: setAy })),
+            React.createElement("div", { style: { display: "flex", justifyContent: "center", gap: 8 } }, [
+                { id: "add", label: "＋ ပေါင်း" },
+                { id: "sub", label: "－ နှုတ်" },
+            ].map((o) => {
+                const isActive = op === o.id;
+                return (React.createElement("button", { key: o.id, onClick: () => setOp(o.id), style: {
+                        flex: 1,
+                        borderRadius: 10,
+                        padding: "10px 0",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        border: `1px solid ${isActive ? C.gold : C.fieldBorder}`,
+                        cursor: "pointer",
+                        background: isActive ? C.gold : "transparent",
+                        color: isActive ? "#1a1610" : C.mutedText,
+                        transition: "background 0.15s, color 0.15s, border-color 0.15s",
+                    } }, o.label));
+            })),
+            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                React.createElement(Label, null, "\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A (\u1001)"),
+                React.createElement(WeightInputs, { k: bk, p: bp, y: by, setK: setBk, setP: setBp, setY: setBy })),
+            React.createElement(Divider, null),
+            isNegative ? (React.createElement(ResultCard, { title: "\u101B\u101C\u1012\u103A", accent: "#b35633" }, "(\u1001) \u1000 (\u1000) \u1011\u1000\u103A\u1000\u103C\u102E\u1038\u1014\u1031\u101E\u1016\u103C\u1004\u1037\u103A \u101B\u101C\u1012\u103A\u1019\u103E\u102C \u1021\u1014\u103E\u102F\u1010\u103A\u1010\u1014\u103A\u1016\u102D\u102F\u1038\u1016\u103C\u1005\u103A\u101E\u103D\u102C\u1038\u1015\u102B\u101E\u100A\u103A \u2014 \u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A\u1014\u1031\u101B\u102C \u101C\u1032\u1015\u103C\u102E\u1038\u1011\u1015\u103A\u1005\u1019\u103A\u1038\u1000\u103C\u100A\u1037\u103A\u1015\u102B\u104B")) : (React.createElement(ResultCard, { title: op === "add" ? "ပေါင်းလဒ် စုစုပေါင်း" : "နှုတ်ပြီးလက်ကျန်" },
+                React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                    React.createElement("div", { style: { color: C.gold, fontSize: 18, fontWeight: 600 } },
+                        React.createElement(WeightLine, { ...fromPel(total) })),
+                    React.createElement(Note, null,
+                        "\u1000\u103B\u1015\u103A\u1015\u103C\u100A\u1037\u103A\u1016\u103C\u1004\u1037\u103A \u2014 ",
+                        fmt(total / 16, 4),
+                        " \u1000\u103B\u1015\u103A \u2022 \u1015\u1032\u1015\u103C\u100A\u1037\u103A\u1016\u103C\u1004\u1037\u103A \u2014 ",
+                        fmt(total, 3),
+                        " \u1015\u1032 \u2022 \u101B\u103D\u1031\u1038\u1015\u103C\u100A\u1037\u103A\u1016\u103C\u1004\u1037\u103A \u2014 ",
+                        fmt(total * 8, 2),
+                        " \u101B\u103D\u1031\u1038"))))));
+    }
+    // =========================================================================
+    // TAB 2 — alloy / purity (စပ်ခဲ) calculator
+    // =========================================================================
+    function AlloyCalculator() {
+        const [k, setK] = useState("0");
+        const [p, setP] = useState("13");
+        const [y, setY] = useState("0");
+        const [fromPurity, setFromPurity] = useState("16");
+        const [toPurity, setToPurity] = useState("13");
+        const W1 = toPel(k, p, y);
+        const P1 = Number(fromPurity) || 0;
+        const P2 = Number(toPurity) || 0;
+        const result = useMemo(() => {
+            if (!W1 || !P1 || !P2)
+                return null;
+            if (P1 > P2) {
+                const Wf = (W1 * P1) / P2;
+                const alloy = Wf - W1;
+                return { mode: "dilute", alloy, Wf };
+            }
+            if (P2 > P1) {
+                if (P2 >= 16)
+                    return { mode: "impossible" };
+                const x = (W1 * (P2 - P1)) / (16 - P2);
+                return { mode: "enrich", pureAdd: x, Wf: W1 + x };
+            }
+            return { mode: "same" };
+        }, [W1, P1, P2]);
+        return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+            React.createElement(Hint, null, "\u101C\u1000\u103A\u101B\u103E\u102D\u101B\u103D\u103E\u1031\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A\u1014\u103E\u1004\u1037\u103A \u1015\u1032\u101B\u100A\u103A\u1000\u102D\u102F \u1011\u100A\u1037\u103A\u1015\u103C\u102E\u1038 \u1015\u103C\u1031\u102C\u1004\u103A\u1038\u101C\u102D\u102F\u101E\u1031\u102C\u1015\u1032\u101B\u100A\u103A\u1000\u102D\u102F \u101B\u103D\u1031\u1038\u1015\u102B \u2014 \u1005\u1015\u103A\u101B\u1019\u100A\u1037\u103A \u1007\u1015\u103A/\u101B\u103D\u103E\u1031\u1001\u103B\u102D\u1014\u103A\u1000\u102D\u102F \u1010\u103D\u1000\u103A\u1015\u1031\u1038\u1015\u102B\u1019\u100A\u103A\u104B"),
+            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                React.createElement(Label, null, "\u101C\u1000\u103A\u101B\u103E\u102D\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A"),
+                React.createElement(WeightInputs, { k: k, p: p, y: y, setK: setK, setP: setP, setY: setY })),
+            React.createElement("div", { className: "grid2" },
+                React.createElement(PuritySelect, { label: "\u101C\u1000\u103A\u101B\u103E\u102D\u1015\u1032\u101B\u100A\u103A", value: fromPurity, onChange: setFromPurity }),
+                React.createElement(PuritySelect, { label: "\u1015\u103C\u1031\u102C\u1004\u103A\u1038\u101C\u102D\u102F\u101E\u1031\u102C\u1015\u1032\u101B\u100A\u103A", value: toPurity, onChange: setToPurity })),
+            React.createElement(Divider, null),
+            !result && React.createElement(Hint, null, "\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A\u1014\u103E\u1004\u1037\u103A \u1015\u1032\u101B\u100A\u103A\u1019\u103B\u102C\u1038\u1000\u102D\u102F \u1016\u103C\u100A\u1037\u103A\u1015\u102B\u104B"),
+            result && result.mode === "same" && (React.createElement(ResultCard, { title: "\u101B\u101C\u1012\u103A" }, "\u1015\u1032\u101B\u100A\u103A\u1014\u103E\u1005\u103A\u1001\u102F \u1010\u1030\u100A\u102E\u1014\u1031\u101E\u1016\u103C\u1004\u1037\u103A \u1005\u1015\u103A\u101B\u1014\u103A\u1019\u101C\u102D\u102F\u1015\u102B\u104B")),
+            result && result.mode === "impossible" && (React.createElement(ResultCard, { title: "\u101B\u101C\u1012\u103A", accent: "#b35633" }, "\u1041\u1046 \u1015\u1032\u101B\u100A\u103A\u1011\u1000\u103A \u1019\u103C\u1004\u1037\u103A\u104D\u1019\u101B\u101E\u1031\u102C\u1000\u103C\u1031\u102C\u1004\u1037\u103A \u1024\u1015\u103C\u1031\u102C\u1004\u103A\u1038\u101C\u1032\u1019\u103E\u102F\u1000\u102D\u102F \u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u104D\u1019\u101B\u1015\u102B\u104B")),
+            result && result.mode === "dilute" && (React.createElement(ResultCard, { title: `${fmt(P1)} ပဲရည် → ${fmt(P2)} ပဲရည် (စပ်ခဲ ထည့်ရန်)` },
+                React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                    React.createElement("div", null,
+                        "\u1011\u100A\u1037\u103A\u101B\u1019\u100A\u1037\u103A \u1005\u1015\u103A\u1001\u1032\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A \u2014 ",
+                        React.createElement("span", { style: { color: C.gold } },
+                            React.createElement(WeightLine, { ...fromPel(result.alloy) }))),
+                    React.createElement("div", null,
+                        "\u1005\u1015\u103A\u1015\u103C\u102E\u1038\u101B\u101C\u1012\u103A \u1005\u102F\u1005\u102F\u1015\u1031\u102B\u1004\u103A\u1038\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A \u2014 ",
+                        React.createElement("span", { style: { color: C.gold } },
+                            React.createElement(WeightLine, { ...fromPel(result.Wf) })))))),
+            result && result.mode === "enrich" && (React.createElement(ResultCard, { title: `${fmt(P1)} ပဲရည် → ${fmt(P2)} ပဲရည် (ရွှေစင်ထည့်ရန်)` },
+                React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                    React.createElement("div", null,
+                        "\u1011\u100A\u1037\u103A\u101B\u1019\u100A\u1037\u103A \u1041\u1046 \u1015\u1032\u101B\u100A\u103A \u101B\u103D\u103E\u1031\u1005\u1004\u103A\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A \u2014 ",
+                        React.createElement("span", { style: { color: C.gold } },
+                            React.createElement(WeightLine, { ...fromPel(result.pureAdd) }))),
+                    React.createElement("div", null,
+                        "\u1005\u1015\u103A\u1015\u103C\u102E\u1038\u101B\u101C\u1012\u103A \u1005\u102F\u1005\u102F\u1015\u1031\u102B\u1004\u103A\u1038\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A \u2014 ",
+                        React.createElement("span", { style: { color: C.gold } },
+                            React.createElement(WeightLine, { ...fromPel(result.Wf) })))))),
+            React.createElement(Note, null, "* \u1041\u1046 \u1015\u1032\u101B\u100A\u103A = \u101B\u103D\u103E\u1031\u1005\u1004\u103A\u101B\u100A\u103A \u1021\u1014\u1031\u1014\u103E\u1004\u1037\u103A \u101E\u1010\u103A\u1019\u103E\u1010\u103A\u1011\u102C\u1038\u1015\u102B\u101E\u100A\u103A\u104B \u1005\u1015\u103A\u1001\u1032\u101E\u100A\u103A \u101B\u103D\u103E\u1031\u1013\u102C\u1010\u103A \u101C\u102F\u1036\u1038\u101D\u1019\u1015\u102B\u101F\u102F \u101A\u1030\u1006\u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u1011\u102C\u1038\u1015\u102B\u101E\u100A\u103A\u104B")));
+    }
+    // =========================================================================
+    // TAB 3 — inner/outer mix spread (အတွင်းစပ် / အပြင်စပ်)
+    // =========================================================================
+    function SpreadCalculator() {
+        const [pelYi, setPelYi] = useState("15");
+        const [ywayYi, setYwayYi] = useState("0");
+        const [pricePerKyat, setPricePerKyat] = useState("9500000");
+        const P = (Number(pelYi) || 0) + (Number(ywayYi) || 0) / 8;
+        const price = Number(pricePerKyat) || 0;
+        const calc = useMemo(() => {
+            if (!price || P <= 0 || P > 16)
+                return null;
+            const innerValue = (P / 16) * price;
+            const outerValue = (16 / (16 + (16 - P))) * price;
+            const diff = outerValue - innerValue;
+            const innerPct = (P / 16) * 100;
+            const outerPct = (16 / (32 - P)) * 100;
+            const alloy = 16 - P;
+            return { innerValue, outerValue, diff, innerPct, outerPct, alloy };
+        }, [P, price]);
+        return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+            React.createElement(Hint, null,
+                "\u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u101C\u102D\u102F\u101E\u1031\u102C \u1015\u1032\u101B\u100A\u103A\u1014\u103E\u1004\u1037\u103A \u1021\u1001\u1031\u102B\u1000\u103A\u1015\u1031\u102B\u1000\u103A\u1008\u1031\u1038 (\u1041 \u1000\u103B\u1015\u103A\u101E\u102C\u1038) \u1000\u102D\u102F \u1011\u100A\u1037\u103A\u1015\u102B \u2014 ",
+                React.createElement("b", null, "\u1021\u1010\u103D\u1004\u103A\u1038\u1005\u1015\u103A\u1008\u1031\u1038"),
+                "\u104A ",
+                React.createElement("b", null, "\u1021\u1015\u103C\u1004\u103A\u1005\u1015\u103A\u1008\u1031\u1038"),
+                " \u1014\u103E\u1004\u1037\u103A \u1008\u1031\u1038\u1000\u103D\u102C\u1001\u103C\u102C\u1038\u1019\u103E\u102F\u1000\u102D\u102F \u1041 \u1000\u103B\u1015\u103A\u101E\u102C\u1038\u1014\u103E\u102F\u1014\u103A\u1038\u1016\u103C\u1004\u1037\u103A \u1010\u103D\u1000\u103A\u1015\u1031\u1038\u1015\u102B\u1019\u100A\u103A\u104B"),
+            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                React.createElement(Label, null, "\u1010\u103D\u1000\u103A\u1019\u100A\u1037\u103A\u1015\u1032\u101B\u100A\u103A"),
+                React.createElement("div", { className: "grid2" },
+                    React.createElement(NumberField, { label: "\u1015\u1032\u101B\u100A\u103A", value: pelYi, onChange: setPelYi }),
+                    React.createElement(NumberField, { label: "\u101B\u103D\u1031\u1038\u101B\u100A\u103A", value: ywayYi, onChange: setYwayYi })),
+                React.createElement(Note, null,
+                    "= ",
+                    fmt(Math.floor(P), 0),
+                    " \u1015\u1032 ",
+                    fmt((P - Math.floor(P)) * 8, 2),
+                    " \u101B\u103D\u1031\u1038\u101B\u100A\u103A (",
+                    fmt(P, 4),
+                    " \u1015\u1032\u101B\u100A\u103A)")),
+            React.createElement(NumberField, { label: "\u1021\u1001\u1031\u102B\u1000\u103A\u1015\u1031\u102B\u1000\u103A\u1008\u1031\u1038 / \u1041 \u1000\u103B\u1015\u103A\u101E\u102C\u1038", value: pricePerKyat, onChange: setPricePerKyat, suffix: "\u1000\u103B\u1015\u103A" }),
+            React.createElement(Divider, null),
+            !calc && React.createElement(Hint, null, "\u1015\u1032\u101B\u100A\u103A (\u1041\u2013\u1041\u1046) \u1014\u103E\u1004\u1037\u103A \u1021\u1001\u1031\u102B\u1000\u103A\u1008\u1031\u1038\u1000\u102D\u102F \u1019\u103E\u1014\u103A\u1000\u1014\u103A\u1005\u103D\u102C\u1016\u103C\u100A\u1037\u103A\u1015\u102B\u104B"),
+            calc && (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16 } },
+                React.createElement("div", null,
+                    React.createElement(Note, null, "\u1021\u1010\u103D\u1004\u103A\u1038\u1005\u1015\u103A\u1008\u1031\u1038 = \u1015\u1032\u101B\u100A\u103A \u00F7 \u1041\u1046 \u00D7 \u1021\u1001\u1031\u102B\u1000\u103A\u1008\u1031\u1038"),
+                    React.createElement("div", { style: { color: C.gold, fontSize: 22, fontWeight: 700, marginTop: 4 } },
+                        fmt(calc.innerValue, 0),
+                        " \u1000\u103B\u1015\u103A"),
+                    React.createElement(Note, null,
+                        fmt(P, 2),
+                        " \u00F7 16 = ",
+                        fmt(calc.innerPct, 4),
+                        "%")),
+                React.createElement(Divider, null),
+                React.createElement("div", null,
+                    React.createElement(Note, null, "\u1021\u1015\u103C\u1004\u103A\u1005\u1015\u103A\u1008\u1031\u1038 = \u1041\u1046 \u00F7 [\u1041\u1046 + (\u1041\u1046 \u2212 \u1015\u1032\u101B\u100A\u103A)] \u00D7 \u1021\u1001\u1031\u102B\u1000\u103A\u1008\u1031\u1038"),
+                    React.createElement("div", { style: { color: C.gold, fontSize: 22, fontWeight: 700, marginTop: 4 } },
+                        fmt(calc.outerValue, 0),
+                        " \u1000\u103B\u1015\u103A"),
+                    React.createElement(Note, null,
+                        "\u1021\u101B\u1031\u102C\u1021\u1001\u103B\u102D\u102F ",
+                        fmt(Math.floor(calc.alloy), 0),
+                        " \u1015\u1032 ",
+                        fmt((calc.alloy - Math.floor(calc.alloy)) * 8, 2),
+                        " \u101B\u103D\u1031\u1038 \u1011\u100A\u1037\u103A\u101E\u1031\u102C\u1018\u1031\u102C\u103A | 16 \u00F7 ",
+                        fmt(32 - P, 0),
+                        " = ",
+                        fmt(calc.outerPct, 4),
+                        "%")),
+                React.createElement(Divider, null),
+                React.createElement(ResultCard, { title: "\u1000\u103D\u102C\u1001\u103C\u102C\u1038\u1001\u103B\u1000\u103A", accent: C.gold },
+                    "\u1021\u1015\u103C\u1004\u103A\u1005\u1015\u103A\u1000 \u1021\u1010\u103D\u1004\u103A\u1038\u1005\u1015\u103A\u1011\u1000\u103A ",
+                    React.createElement("span", { style: { color: C.gold, fontWeight: 700 } },
+                        fmt(Math.abs(calc.diff), 0),
+                        " \u1000\u103B\u1015\u103A"),
+                    " ",
+                    calc.diff >= 0 ? "ပိုမြင့်" : "ပိုနိမ့်",
+                    "\u1015\u102B\u101E\u100A\u103A\u104B")))));
+    }
+    // =========================================================================
+    // TAB 4 — market price calculator
+    // =========================================================================
+    function MarketPriceCalculator() {
+        const [pricePerKyat, setPricePerKyat] = useState("");
+        const [refPurity, setRefPurity] = useState("16");
+        const [k, setK] = useState("0");
+        const [p, setP] = useState("1");
+        const [y, setY] = useState("0");
+        const [goldPurity, setGoldPurity] = useState("16");
+        const price = Number(pricePerKyat) || 0;
+        const R = Number(refPurity) || 16;
+        const W = toPel(k, p, y);
+        const G = Number(goldPurity) || 0;
+        const value = useMemo(() => {
+            if (!price || !W || !G || !R)
+                return null;
+            const pricePerKyatPure16 = (price / R) * 16;
+            const kyatWeight = W / 16;
+            return (pricePerKyatPure16 * G * kyatWeight) / 16;
+        }, [price, W, G, R]);
+        return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } },
+            React.createElement(Hint, null, "\u1000\u102C\u101C\u1015\u1031\u102B\u1000\u103A\u1008\u1031\u1038 (\u1000\u103B\u1015\u103A\u101E\u102C\u1038\u101C\u103B\u103E\u1004\u103A) \u1000\u102D\u102F \u1011\u100A\u1037\u103A\u1015\u103C\u102E\u1038 \u101B\u103D\u103E\u1031\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A\u104A \u1015\u1032\u101B\u100A\u103A\u1014\u103E\u1004\u1037\u103A \u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u1015\u1031\u1038\u1015\u102B\u101E\u100A\u103A\u104B"),
+            React.createElement("div", { className: "grid2" },
+                React.createElement(NumberField, { label: "\u1000\u103B\u1015\u103A\u101E\u102C\u1038\u1005\u103B\u1031\u1038", value: pricePerKyat, onChange: setPricePerKyat, suffix: "\u1000\u103B\u1015\u103A" }),
+                React.createElement(PuritySelect, { label: "\u1008\u1031\u1038\u1014\u103E\u102F\u1014\u103A\u1038\u104F\u1015\u1032\u101B\u100A\u103A", value: refPurity, onChange: setRefPurity })),
+            React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+                React.createElement(Label, null, "\u101B\u103D\u103E\u1031\u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A"),
+                React.createElement(WeightInputs, { k: k, p: p, y: y, setK: setK, setP: setP, setY: setY })),
+            React.createElement(PuritySelect, { label: "\u1024\u101B\u103D\u103E\u1031\u104F \u1015\u1032\u101B\u100A\u103A", value: goldPurity, onChange: setGoldPurity }),
+            React.createElement(Divider, null),
+            value === null ? (React.createElement(Hint, null, "\u1008\u1031\u1038\u1014\u103E\u102F\u1014\u103A\u1038\u104A \u1021\u101C\u1031\u1038\u1001\u103B\u102D\u1014\u103A\u104A \u1015\u1032\u101B\u100A\u103A \u1021\u102C\u1038\u101C\u102F\u1036\u1038\u1016\u103C\u100A\u1037\u103A\u1015\u102B\u104B")) : (React.createElement(ResultCard, { title: "\u1001\u1014\u1037\u103A\u1019\u103E\u1014\u103A\u1038\u1010\u1014\u103A\u1016\u102D\u102F\u1038", accent: C.gold },
+                React.createElement("span", { style: { color: C.gold, fontSize: 26, fontWeight: 700 } }, fmt(value)),
+                " \u1000\u103B\u1015\u103A"))));
+    }
+    // =========================================================================
+    // root app
+    // =========================================================================
+    const TABS = [
+        { id: "addsub", label: "အပေါင်းအနှုတ်", render: WeightAddSubtract },
+        { id: "alloy", label: "စပ်ခဲတွက်", render: AlloyCalculator },
+        { id: "spread", label: "ဈေးကွာခြားမှု", render: SpreadCalculator },
+        { id: "market", label: "ကာလပေါက်ဈေး", render: MarketPriceCalculator },
+    ];
+    function App() {
+        const [active, setActive] = useState("addsub");
+        const Active = TABS.find((t) => t.id === active).render;
+        return (React.createElement("div", { style: { minHeight: "100vh", width: "100%", display: "flex", justifyContent: "center", padding: "24px 12px", background: C.bg, fontFamily: "'Noto Sans Myanmar','Padauk',sans-serif" } },
+            React.createElement("div", { style: { width: "100%", maxWidth: 448 } },
+                React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: 24 } },
+                    React.createElement(ScaleMark, null),
+                    React.createElement("h1", { style: { fontFamily: "'Noto Serif Myanmar', serif", fontSize: 24, fontWeight: 700, color: C.cream, margin: "8px 0 0" } }, "\u101B\u103D\u103E\u1031\u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u1000\u102D\u101B\u102D\u101A\u102C"),
+                    React.createElement("p", { style: { fontSize: 12, color: C.dimText, marginTop: 4 } }, "\u1000\u103B\u1015\u103A \u2022 \u1015\u1032 \u2022 \u101B\u103D\u1031\u1038 \u2014 \u1015\u1032\u101B\u100A\u103A\u1014\u103E\u1004\u1037\u103A \u1008\u1031\u1038\u1014\u103E\u102F\u1014\u103A\u1038 \u1010\u103D\u1000\u103A\u1005\u1000\u103A")),
+                React.createElement("div", { className: "grid4", style: { marginBottom: 20, borderRadius: 14, background: "#1c1811", border: `1px solid ${C.panelBorder}`, padding: 4 } }, TABS.map((t) => {
+                    const isActive = active === t.id;
+                    return (React.createElement("button", { key: t.id, onClick: () => setActive(t.id), style: {
+                            borderRadius: 10,
+                            padding: "8px 4px",
+                            fontSize: 12,
+                            lineHeight: 1.3,
+                            border: "none",
+                            cursor: "pointer",
+                            background: isActive ? C.gold : "transparent",
+                            color: isActive ? "#1a1610" : C.mutedText,
+                            fontWeight: isActive ? 600 : 400,
+                            transition: "background 0.15s, color 0.15s",
+                        } }, t.label));
+                })),
+                React.createElement("div", { style: { borderRadius: 18, border: `1px solid ${C.panelBorder}`, background: C.panel, padding: 20, boxShadow: "0 20px 50px rgba(0,0,0,0.45)" } },
+                    React.createElement(Active, null)),
+                React.createElement("p", { style: { textAlign: "center", fontSize: 10, color: C.faintText, marginTop: 20 } }, "PST v2.3 • 3-Day Expiry Option"),
+                React.createElement("p", { style: { textAlign: "center", fontSize: 10, color: C.faintText, marginTop: 8 } }, "\u1001\u1014\u1037\u103A\u1019\u103E\u1014\u103A\u1038\u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u1019\u103E\u102F\u1019\u103B\u102C\u1038\u101E\u102C\u1016\u103C\u1005\u103A\u1015\u103C\u102E\u1038 \u101C\u1000\u103A\u1010\u103D\u1031\u1037\u1006\u102D\u102F\u1004\u103A\u104F\u1005\u100A\u103A\u1038\u1019\u103B\u1009\u103A\u1038\u1014\u103E\u1004\u1037\u103A \u1010\u102D\u102F\u1000\u103A\u1006\u102D\u102F\u1004\u103A\u1005\u1005\u103A\u1006\u1031\u1038\u1015\u102B"))));
+    }
+    // =========================================================================
+    // AuthGate — Firebase Auth + UID Admin + allowedEmails
+    // =========================================================================
+    const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+    const pad2 = (value) => String(value).padStart(2, "0");
+    const toDateTimeLocalValue = (dateValue) => {
+        const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+        if (!Number.isFinite(date.getTime())) return "";
+        return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+    };
+    const defaultExpiryValue = () => {
+        const date = new Date();
+        date.setDate(date.getDate() + 30);
+        date.setSeconds(0, 0);
+        return toDateTimeLocalValue(date);
+    };
+    const expiryToMillis = (value) => {
+        if (!value) return 0;
+        if (typeof value.toMillis === "function") return value.toMillis();
+        if (typeof value.toDate === "function") return value.toDate().getTime();
+        if (typeof value.seconds === "number") return value.seconds * 1000;
+        const parsed = new Date(value).getTime();
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const formatExpiry = (value) => {
+        const millis = expiryToMillis(value);
+        if (!millis) return "ကာလမသတ်မှတ်ရသေး";
+        return new Date(millis).toLocaleString("en-GB", {
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit", hour12: true,
+        });
+    };
+    async function getAccessProfile(user) {
+        if (!user) return { allowed: false, admin: false, reason: "not-signed-in" };
+        if (!window.db) throw window.firestoreStartupError || new Error("Firestore မချိတ်ဆက်ရသေးပါ။");
+        const adminSnap = await window.db.collection("admins").doc(user.uid).get();
+        if (adminSnap.exists) {
+            const adminData = adminSnap.data() || {};
+            if (adminData.active === true && adminData.role === "admin") {
+                return { allowed: true, admin: true, role: "admin", expiresAtMs: 0 };
+            }
+        }
+        const email = normalizeEmail(user.email);
+        if (!email) return { allowed: false, admin: false, reason: "missing-email" };
+        if (!user.emailVerified) return { allowed: false, admin: false, reason: "email-not-verified" };
+        const allowedSnap = await window.db.collection("allowedEmails").doc(email).get();
+        if (!allowedSnap.exists) return { allowed: false, admin: false, reason: "not-allowed" };
+        const allowedData = allowedSnap.data() || {};
+        if (allowedData.active !== true) return { allowed: false, admin: false, reason: "inactive" };
+        const expiresAtMs = expiryToMillis(allowedData.expiresAt);
+        if (expiresAtMs && Date.now() >= expiresAtMs) {
+            return { allowed: false, admin: false, reason: "expired", expiresAtMs };
+        }
+        return { allowed: true, admin: false, role: allowedData.role || "user", expiresAtMs };
+    }
+    function UserManager({ currentUser, onClose }) {
+        const [users, setUsers] = useState([]);
+        const [newEmail, setNewEmail] = useState("");
+        const [newPassword, setNewPassword] = useState("");
+        const [newExpiry, setNewExpiry] = useState(defaultExpiryValue());
+        const [loading, setLoading] = useState(true);
+        const [saving, setSaving] = useState(false);
+        const [message, setMessage] = useState("");
+        const [panelError, setPanelError] = useState("");
+        const loadUsers = async () => {
+            setLoading(true);
+            setPanelError("");
+            try {
+                if (!window.db)
+                    throw window.firestoreStartupError || new Error("Firestore မချိတ်ဆက်ရသေးပါ။");
+                const snap = await window.db.collection("allowedEmails").orderBy("email").get();
+                const rows = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+                setUsers(rows);
+            }
+            catch (err) {
+                setPanelError("အသုံးပြုသူစာရင်း မဖတ်နိုင်ပါ — " + (err.message || err));
+            }
+            finally {
+                setLoading(false);
+            }
+        };
+        React.useEffect(() => {
+            loadUsers();
+        }, []);
+        const setExpiryDays = (days) => {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            date.setSeconds(0, 0);
+            setNewExpiry(toDateTimeLocalValue(date));
+        };
+        const handleAddUser = async (e) => {
+            e.preventDefault();
+            setMessage("");
+            setPanelError("");
+            const email = normalizeEmail(newEmail);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                setPanelError("Email လိပ်စာကို မှန်ကန်စွာဖြည့်ပါ။");
+                return;
+            }
+            if (newPassword && newPassword.length < 6) {
+                setPanelError("Password သည် အနည်းဆုံး ၆ လုံးရှိရပါမည်။");
+                return;
+            }
+            const expiryDate = new Date(newExpiry);
+            if (!newExpiry || !Number.isFinite(expiryDate.getTime())) {
+                setPanelError("ဝင်ခွင့်ကုန်ဆုံးမည့် ရက်နှင့်အချိန်ကို ဖြည့်ပါ။");
+                return;
+            }
+            if (expiryDate.getTime() <= Date.now()) {
+                setPanelError("ကုန်ဆုံးချိန်သည် လက်ရှိအချိန်ထက် နောက်ကျရပါမည်။");
+                return;
+            }
+            if (!window.db) {
+                setPanelError("Firestore မချိတ်ဆက်နိုင်သေးပါ။");
+                return;
+            }
+            setSaving(true);
+            let secondaryAuth = null;
+            try {
+                let authUserCreated = false;
+                let verificationSent = false;
+                if (newPassword) {
+                    let secondaryApp = firebase.apps.find((app) => app.name === "PSTUserCreator");
+                    if (!secondaryApp) {
+                        secondaryApp = firebase.initializeApp(window.firebaseConfig, "PSTUserCreator");
+                    }
+                    secondaryAuth = secondaryApp.auth();
+                    try {
+                        const credential = await secondaryAuth.createUserWithEmailAndPassword(email, newPassword);
+                        authUserCreated = true;
+                        if (credential.user) {
+                            try {
+                                await credential.user.sendEmailVerification();
+                                verificationSent = true;
+                            }
+                            catch (_) { }
+                        }
+                    }
+                    catch (err) {
+                        if (err.code !== "auth/email-already-in-use")
+                            throw err;
+                    }
+                }
+                const ref = window.db.collection("allowedEmails").doc(email);
+                const existing = await ref.get();
+                const now = firebase.firestore.FieldValue.serverTimestamp();
+                const expiresAt = firebase.firestore.Timestamp.fromDate(expiryDate);
+                if (existing.exists) {
+                    const existingData = existing.data() || {};
+                    await ref.update({
+                        active: true,
+                        role: existingData.role === "admin" ? "admin" : "user",
+                        expiresAt,
+                        updatedAt: now,
+                        updatedBy: currentUser.uid,
+                    });
+                }
+                else {
+                    await ref.set({
+                        email,
+                        active: true,
+                        role: "user",
+                        expiresAt,
+                        createdAt: now,
+                        createdBy: currentUser.uid,
+                        updatedAt: now,
+                        updatedBy: currentUser.uid,
+                    });
+                }
+                if (secondaryAuth)
+                    await secondaryAuth.signOut();
+                setNewEmail("");
+                setNewPassword("");
+                setNewExpiry(defaultExpiryValue());
+                setMessage(authUserCreated
+                    ? verificationSent
+                        ? "User account ဖန်တီးပြီး Verification Email ပို့ထားပါသည်။ Email အတည်ပြုပြီးမှ ဝင်နိုင်ပါမည်။"
+                        : "User account နှင့် ဝင်ရောက်ခွင့်ကို ဖန်တီးပြီးပါပြီ။"
+                    : "Email ကို ဝင်ရောက်ခွင့်စာရင်းထဲ ထည့်ပြီးပါပြီ။ Google Login သုံးနိုင်ပါသည်။");
+                await loadUsers();
+            }
+            catch (err) {
+                if (secondaryAuth) {
+                    try {
+                        await secondaryAuth.signOut();
+                    }
+                    catch (_) { }
+                }
+                if (err.code === "auth/invalid-email")
+                    setPanelError("Email format မှားနေပါတယ်။");
+                else if (err.code === "auth/weak-password")
+                    setPanelError("Password အနည်းဆုံး ၆ လုံးထည့်ပါ။");
+                else if (err.code === "auth/operation-not-allowed")
+                    setPanelError("Firebase Authentication မှာ Email/Password ကို Enable လုပ်ပါ။");
+                else
+                    setPanelError("အသုံးပြုသူ မထည့်နိုင်ပါ — " + (err.message || err));
+            }
+            finally {
+                setSaving(false);
+            }
+        };
+        const handleToggleUser = async (item) => {
+            const email = normalizeEmail(item.email || item.id);
+            if (!email || email === normalizeEmail(currentUser.email))
+                return;
+            setPanelError("");
+            setMessage("");
+            try {
+                await window.db.collection("allowedEmails").doc(item.id).update({
+                    active: item.active !== true,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.uid,
+                });
+                setMessage(item.active === true ? "User ဝင်ရောက်ခွင့် ပိတ်ပြီးပါပြီ။" : "User ဝင်ရောက်ခွင့် ပြန်ဖွင့်ပြီးပါပြီ။");
+                await loadUsers();
+            }
+            catch (err) {
+                setPanelError("ဝင်ရောက်ခွင့် မပြောင်းနိုင်ပါ — " + (err.message || err));
+            }
+        };
+        const handleChangeExpiry = async (item) => {
+            const email = normalizeEmail(item.email || item.id);
+            if (!email || email === normalizeEmail(currentUser.email)) return;
+            const currentMillis = expiryToMillis(item.expiresAt);
+            const defaultValue = currentMillis ? toDateTimeLocalValue(new Date(currentMillis)) : defaultExpiryValue();
+            const entered = window.prompt(email + " အတွက် ကုန်ဆုံးမည့်ရက်/အချိန်ကို YYYY-MM-DDTHH:MM ပုံစံဖြင့် ဖြည့်ပါ။", defaultValue);
+            if (entered === null) return;
+            const expiryDate = new Date(entered);
+            if (!Number.isFinite(expiryDate.getTime())) {
+                setPanelError("ရက်နှင့်အချိန်ပုံစံ မမှန်ပါ။ ဥပမာ 2026-09-04T18:30");
+                return;
+            }
+            if (expiryDate.getTime() <= Date.now()) {
+                setPanelError("ကုန်ဆုံးချိန်သည် လက်ရှိအချိန်ထက် နောက်ကျရပါမည်။");
+                return;
+            }
+            setPanelError(""); setMessage("");
+            try {
+                await window.db.collection("allowedEmails").doc(item.id).update({
+                    active: true,
+                    expiresAt: firebase.firestore.Timestamp.fromDate(expiryDate),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: currentUser.uid,
+                });
+                setMessage(email + " ၏ ဝင်ခွင့်ကာလကို " + formatExpiry(expiryDate) + " အထိ သတ်မှတ်ပြီးပါပြီ။");
+                await loadUsers();
+            } catch (err) {
+                setPanelError("ဝင်ခွင့်ကာလ မပြောင်းနိုင်ပါ — " + (err.message || err));
+            }
+        };
+        const handleRemoveUser = async (item) => {
+            const email = normalizeEmail(item.email || item.id);
+            if (!email || email === normalizeEmail(currentUser.email))
+                return;
+            if (!window.confirm(email + " ကို ခွင့်ပြုစာရင်းမှ ဖယ်ရှားမည်လား?"))
+                return;
+            setPanelError("");
+            setMessage("");
+            try {
+                await window.db.collection("allowedEmails").doc(item.id).delete();
+                setMessage("User ကို ခွင့်ပြုစာရင်းမှ ဖယ်ရှားပြီးပါပြီ။ Authentication account ကိုတော့ မဖျက်ပါ။");
+                await loadUsers();
+            }
+            catch (err) {
+                setPanelError("User ကို မဖယ်ရှားနိုင်ပါ — " + (err.message || err));
+            }
+        };
+        return (React.createElement("div", { onClick: onClose, style: {
+                position: "fixed", inset: 0, zIndex: 100, display: "flex",
+                alignItems: "center", justifyContent: "center", padding: 14,
+                background: "rgba(0,0,0,0.72)", fontFamily: "'Noto Sans Myanmar',sans-serif",
+            } },
+            React.createElement("div", { onClick: (e) => e.stopPropagation(), style: {
+                    width: "100%", maxWidth: 460, maxHeight: "90vh", overflowY: "auto",
+                    borderRadius: 18, border: `1px solid ${C.panelBorder}`,
+                    background: C.panel, padding: 20, boxShadow: "0 24px 70px rgba(0,0,0,0.65)",
+                } },
+                React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 } },
+                    React.createElement("div", null,
+                        React.createElement("h2", { style: { margin: 0, color: C.cream, fontSize: 20 } }, "\u1021\u101E\u102F\u1036\u1038\u1015\u103C\u102F\u101E\u1030 \u1005\u102E\u1019\u1036\u1001\u1014\u1037\u103A\u1001\u103D\u1032\u1019\u103E\u102F"),
+                        React.createElement("p", { style: { margin: "5px 0 0", color: C.dimText, fontSize: 11 } },
+                            "Admin \u2014 ",
+                            normalizeEmail(currentUser.email))),
+                    React.createElement("button", { onClick: onClose, style: { width: 34, height: 34, borderRadius: 9, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg, color: C.cream, cursor: "pointer", fontSize: 18 } }, "\u00D7")),
+                React.createElement(Divider, null),
+                React.createElement("form", { onSubmit: handleAddUser, style: { display: "flex", flexDirection: "column", gap: 12 } },
+                    React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+                        React.createElement(Label, null, "Email \u1021\u101E\u1005\u103A"),
+                        React.createElement("div", { style: { borderRadius: 10, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg } },
+                            React.createElement("input", { type: "email", value: newEmail, onChange: (e) => setNewEmail(e.target.value), placeholder: "example@gmail.com", autoCapitalize: "none", style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "11px 12px", color: C.cream, fontSize: 14 } }))),
+                    React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+                        React.createElement(Label, null, "\u101A\u102C\u101A\u102E Password \u2014 Email/Password Login \u101E\u102F\u1036\u1038\u1019\u103E\u101E\u102C"),
+                        React.createElement("div", { style: { borderRadius: 10, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg } },
+                            React.createElement("input", { type: "password", value: newPassword, onChange: (e) => setNewPassword(e.target.value), placeholder: "Google Login \u101E\u102C\u101E\u102F\u1036\u1038\u1019\u100A\u103A\u1006\u102D\u102F \u1019\u1016\u103C\u100A\u1037\u103A\u1015\u102B\u1014\u103E\u1004\u1037\u103A", style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "11px 12px", color: C.cream, fontSize: 14 } }))),
+                    React.createElement("div", { style: { border: `1px solid ${C.gold}`, borderRadius: 12, padding: 12, background: "rgba(201,150,44,0.08)", display: "flex", flexDirection: "column", gap: 9 } },
+                        React.createElement("div", { style: { color: C.gold, fontSize: 13, fontWeight: 700 } }, "⏳ USER ဝင်ခွင့်ကာလ သတ်မှတ်ရန်"),
+                        React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 } },
+                            [
+                                { days: 3, label: "၃ ရက်" },
+                                { days: 30, label: "၃၀ ရက်" },
+                                { days: 90, label: "၉၀ ရက်" },
+                                { days: 365, label: "၁ နှစ်" }
+                            ].map((item) => React.createElement("button", {
+                                key: item.days,
+                                type: "button",
+                                onClick: () => setExpiryDays(item.days),
+                                style: {
+                                    borderRadius: 8,
+                                    padding: "7px 3px",
+                                    border: `1px solid ${C.fieldBorder}`,
+                                    background: C.fieldBg,
+                                    color: C.cream,
+                                    fontSize: 11,
+                                    cursor: "pointer"
+                                }
+                            }, item.label))),
+                        React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+                            React.createElement(Label, null, "ကုန်ဆုံးမည့် နေ့ရက်နှင့်အချိန်"),
+                            React.createElement("div", { style: { borderRadius: 10, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg } },
+                                React.createElement("input", {
+                                    type: "datetime-local",
+                                    value: newExpiry,
+                                    min: toDateTimeLocalValue(new Date()),
+                                    onChange: (e) => setNewExpiry(e.target.value),
+                                    style: {
+                                        width: "100%",
+                                        background: "transparent",
+                                        border: "none",
+                                        outline: "none",
+                                        padding: "12px",
+                                        color: C.cream,
+                                        fontSize: 15,
+                                        colorScheme: "dark"
+                                    }
+                                }))),
+                        React.createElement("div", { style: { color: C.cream, fontSize: 11, lineHeight: 1.6 } },
+                            "သတ်မှတ်ထားသော ကုန်ဆုံးချိန် — ",
+                            React.createElement("b", { style: { color: C.gold } }, newExpiry ? formatExpiry(new Date(newExpiry)) : "မသတ်မှတ်ရသေး")),
+                        React.createElement("span", { style: { color: C.faintText, fontSize: 10, lineHeight: 1.5 } }, "ကာလကုန်သွားလျှင် User သည် အလိုအလျောက် ဝင်ရောက်ခွင့်ပိတ်သွားပါမည်။")),
+                    panelError && React.createElement("div", { style: { color: C.danger, fontSize: 12, lineHeight: 1.6 } }, panelError),
+                    message && React.createElement("div", { style: { color: C.gold, fontSize: 12, lineHeight: 1.6 } }, message),
+                    React.createElement("button", { type: "submit", disabled: saving, style: { borderRadius: 10, padding: "11px 0", border: "none", background: C.gold, color: "#1a1610", fontWeight: 700, cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1 } }, saving ? "ထည့်နေသည်..." : "အသုံးပြုသူ ထည့်မည်")),
+                React.createElement(Divider, null),
+                React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
+                    React.createElement(Label, null, "\u1001\u103D\u1004\u1037\u103A\u1015\u103C\u102F\u1011\u102C\u1038\u101E\u1031\u102C Email \u1019\u103B\u102C\u1038"),
+                    React.createElement("button", { onClick: loadUsers, disabled: loading, style: { border: `1px solid ${C.fieldBorder}`, borderRadius: 8, background: C.fieldBg, color: C.mutedText, padding: "6px 9px", cursor: "pointer" } }, "\u21BB \u1015\u103C\u1014\u103A\u1016\u1010\u103A\u1019\u100A\u103A")),
+                loading ? (React.createElement(Hint, null, "\u1005\u102C\u101B\u1004\u103A\u1038\u1016\u1010\u103A\u1014\u1031\u101E\u100A\u103A...")) : users.length === 0 ? (React.createElement(Hint, null, "\u1001\u103D\u1004\u1037\u103A\u1015\u103C\u102F\u1011\u102C\u1038\u101E\u1031\u102C Email \u1019\u101B\u103E\u102D\u101E\u1031\u1038\u1015\u102B\u104B")) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, users.map((item) => {
+                    const email = normalizeEmail(item.email || item.id);
+                    const isSelf = email === normalizeEmail(currentUser.email);
+                    const active = item.active === true;
+                    const expiresAtMs = expiryToMillis(item.expiresAt);
+                    const expired = expiresAtMs > 0 && Date.now() >= expiresAtMs;
+                    const effectiveActive = active && !expired;
+                    return (React.createElement("div", { key: item.id, style: { border: `1px solid ${expired ? C.danger : C.panelBorder}`, borderRadius: 11, background: C.fieldBg, padding: 11 } },
+                        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
+                            React.createElement("div", { style: { minWidth: 0 } },
+                                React.createElement("div", { style: { color: C.cream, fontSize: 13, overflowWrap: "anywhere" } }, email),
+                                React.createElement("div", { style: { marginTop: 3, color: effectiveActive ? C.gold : C.danger, fontSize: 10 } },
+                                    item.role === "admin" ? "ADMIN • " : "USER • ",
+                                    expired ? "EXPIRED" : active ? "ACTIVE" : "INACTIVE",
+                                    isSelf ? " • လက်ရှိအကောင့်" : ""),
+                                React.createElement("div", { style: { marginTop: 4, color: expired ? C.danger : C.faintText, fontSize: 10 } },
+                                    "ကုန်ဆုံးချိန် — ",
+                                    formatExpiry(item.expiresAt))),
+                            !isSelf && (React.createElement("div", { style: { display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 5, flexShrink: 0, maxWidth: 155 } },
+                                React.createElement("button", { onClick: () => handleToggleUser(item), style: { borderRadius: 7, border: `1px solid ${C.fieldBorder}`, background: "transparent", color: active ? C.danger : C.gold, padding: "5px 7px", fontSize: 10, cursor: "pointer" } }, active ? "ပိတ်မည်" : "ဖွင့်မည်"),
+                                React.createElement("button", { onClick: () => handleChangeExpiry(item), style: { borderRadius: 7, border: `1px solid ${C.fieldBorder}`, background: "transparent", color: C.gold, padding: "5px 7px", fontSize: 10, cursor: "pointer" } }, "ကာလပြင်"),
+                                React.createElement("button", { onClick: () => handleRemoveUser(item), style: { borderRadius: 7, border: `1px solid ${C.fieldBorder}`, background: "transparent", color: C.danger, padding: "5px 7px", fontSize: 10, cursor: "pointer" } }, "\u1016\u101A\u103A\u1019\u100A\u103A"))))));
+                }))),
+                React.createElement("p", { style: { margin: "14px 0 0", color: C.faintText, fontSize: 10, lineHeight: 1.6 } }, "Password \u1016\u103C\u1004\u1037\u103A\u1016\u1014\u103A\u1010\u102E\u1038\u101E\u1031\u102C User \u101E\u100A\u103A Verification Email \u1000\u102D\u102F \u1021\u1010\u100A\u103A\u1015\u103C\u102F\u1015\u103C\u102E\u1038\u1019\u103E \u101D\u1004\u103A\u1014\u102D\u102F\u1004\u103A\u1015\u102B\u1019\u100A\u103A\u104B \u201C\u1016\u101A\u103A\u1019\u100A\u103A\u201D \u101E\u100A\u103A Firestore \u1001\u103D\u1004\u1037\u103A\u1015\u103C\u102F\u1005\u102C\u101B\u1004\u103A\u1038\u1019\u103E\u101E\u102C \u1016\u101A\u103A\u101B\u103E\u102C\u1038\u1015\u103C\u102E\u1038 Firebase Authentication account \u1000\u102D\u102F \u1019\u1016\u103B\u1000\u103A\u1015\u102B\u104B"))));
+    }
+
+    function TelegramContact() {
+        return (React.createElement("div", { style: { marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.panelBorder}`, textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: 11, color: C.faintText, marginBottom: 9 } }, "Admin ကို ဆက်သွယ်ရန်"),
+            React.createElement("a", {
+                href: "https://t.me/pstgoldcalculator",
+                target: "_blank",
+                rel: "noopener noreferrer",
+                style: {
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    borderRadius: 10,
+                    padding: "10px 12px",
+                    border: "1px solid #2AABEE",
+                    background: "rgba(42,171,238,0.10)",
+                    color: "#7fd3ff",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textDecoration: "none"
+                }
+            },
+                React.createElement("span", { style: { fontSize: 16 } }, "✈"),
+                React.createElement("span", null, "Telegram  @pstgoldcalculator"))));
+    }
+    function AuthGate() {
+        const [user, setUser] = useState(undefined);
+        const [access, setAccess] = useState({ admin: false, expiresAtMs: 0 });
+        const [email, setEmail] = useState("");
+        const [password, setPassword] = useState("");
+        const [error, setError] = useState("");
+        const [busy, setBusy] = useState(false);
+        const [showUsers, setShowUsers] = useState(false);
+        React.useEffect(() => {
+            let mounted = true;
+            const startupTimer = window.setTimeout(() => {
+                if (mounted)
+                    setUser((current) => current === undefined ? null : current);
+            }, 10000);
+            const unsub = firebase.auth().onAuthStateChanged(async (signedInUser) => {
+                if (!mounted)
+                    return;
+                if (!signedInUser) {
+                    setAccess({ admin: false, expiresAtMs: 0 });
+                    setUser(null);
+                    return;
+                }
+                setUser(undefined);
+                try {
+                    const profile = await getAccessProfile(signedInUser);
+                    if (!mounted)
+                        return;
+                    if (profile.allowed) {
+                        setError("");
+                        setAccess({ admin: profile.admin === true, expiresAtMs: profile.expiresAtMs || 0 });
+                        setUser(signedInUser);
+                        return;
+                    }
+                    const signedInEmail = normalizeEmail(signedInUser.email);
+                    if (profile.reason === "email-not-verified") {
+                        try {
+                            await signedInUser.sendEmailVerification();
+                        }
+                        catch (_) { }
+                        setError("ဒီ Email ကို အတည်မပြုရသေးပါ။ Verification Email ပို့ထားပါသည်။ Email ထဲမှ link ကိုနှိပ်ပြီး ပြန်ဝင်ပါ။");
+                    }
+                    else if (profile.reason === "inactive") {
+                        setError("ဒီ Email ၏ ဝင်ရောက်ခွင့်ကို Admin က ပိတ်ထားပါသည်။");
+                    }
+                    else if (profile.reason === "expired") {
+                        setError("ဒီ Email ၏ သတ်မှတ်ထားသော ဝင်ရောက်ခွင့်ကာလ ကုန်ဆုံးသွားပါပြီ။ Admin ကို ဆက်သွယ်ပါ။");
+                    }
+                    else {
+                        setError("ဒီ Email (" + signedInEmail + ") ကို ခွင့်ပြုမထားပါ။ Admin ကို ဆက်သွယ်ပါ။");
+                    }
+                    await firebase.auth().signOut();
+                }
+                catch (err) {
+                    if (!mounted)
+                        return;
+                    setError("ဝင်ရောက်ခွင့် မစစ်ဆေးနိုင်ပါ။ Firestore Rules၊ Admin UID နှင့် Internet ကို စစ်ပါ — " + (err.message || err));
+                    await firebase.auth().signOut();
+                }
+            });
+            return () => {
+                mounted = false;
+                window.clearTimeout(startupTimer);
+                unsub();
+            };
+        }, []);
+        React.useEffect(() => {
+            if (!user || access.admin || !access.expiresAtMs) return;
+            let checking = false;
+            const checkExpiry = async () => {
+                if (checking || Date.now() < access.expiresAtMs) return;
+                checking = true;
+                setError("သတ်မှတ်ထားသော ဝင်ရောက်ခွင့်ကာလ ကုန်ဆုံးသွားပါပြီ။ Admin ကို ဆက်သွယ်ပါ။");
+                setShowUsers(false);
+                try { await firebase.auth().signOut(); }
+                finally { checking = false; }
+            };
+            checkExpiry();
+            const timer = window.setInterval(checkExpiry, 15000);
+            const onVisible = () => { if (!document.hidden) checkExpiry(); };
+            window.addEventListener("focus", checkExpiry);
+            document.addEventListener("visibilitychange", onVisible);
+            return () => {
+                window.clearInterval(timer);
+                window.removeEventListener("focus", checkExpiry);
+                document.removeEventListener("visibilitychange", onVisible);
+            };
+        }, [user, access.admin, access.expiresAtMs]);
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            setError("");
+            setBusy(true);
+            try {
+                await firebase.auth().signInWithEmailAndPassword(normalizeEmail(email), password);
+            }
+            catch (err) {
+                if (err.code === "auth/invalid-email")
+                    setError("Email format မှားနေပါတယ်။");
+                else if (["auth/user-not-found", "auth/wrong-password", "auth/invalid-credential"].includes(err.code))
+                    setError("Email သို့မဟုတ် Password မှားနေပါတယ်။");
+                else if (err.code === "auth/too-many-requests")
+                    setError("ကြိုးစားမှုများနေလို့ ခဏစောင့်ပြီး ပြန်စမ်းပါ။");
+                else
+                    setError("Login မဝင်နိုင်ပါ — " + (err.message || err));
+            }
+            finally {
+                setBusy(false);
+            }
+        };
+        const handleGoogleLogin = async () => {
+            setError("");
+            setBusy(true);
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: "select_account" });
+                await firebase.auth().signInWithPopup(provider);
+            }
+            catch (err) {
+                if (err.code !== "auth/popup-closed-by-user") {
+                    setError("Google Login မဝင်နိုင်ပါ — " + (err.message || err));
+                }
+            }
+            finally {
+                setBusy(false);
+            }
+        };
+        const handleLogout = async () => {
+            setShowUsers(false);
+            await firebase.auth().signOut();
+        };
+        if (user === undefined) {
+            return (React.createElement("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, color: C.dimText, fontFamily: "'Noto Sans Myanmar',sans-serif" } }, "Firebase \u1001\u103D\u1004\u1037\u103A\u1015\u103C\u102F\u1001\u103B\u1000\u103A \u1005\u1005\u103A\u1006\u1031\u1038\u1014\u1031\u101E\u100A\u103A..."));
+        }
+        if (!user) {
+            return (React.createElement("div", { style: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 16, fontFamily: "'Noto Sans Myanmar',sans-serif" } },
+                React.createElement("div", { style: { width: "100%", maxWidth: 360, borderRadius: 18, border: `1px solid ${C.panelBorder}`, background: C.panel, padding: 28, boxShadow: "0 20px 50px rgba(0,0,0,0.45)" } },
+                    React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 20 } },
+                        React.createElement(ScaleMark, null),
+                        React.createElement("h1", { style: { fontFamily: "'Noto Serif Myanmar', serif", fontSize: 20, fontWeight: 700, color: C.cream, margin: "8px 0 0" } }, "PST \u101B\u103D\u103E\u1031\u1010\u103D\u1000\u103A\u1001\u103B\u1000\u103A\u1000\u102D\u101B\u102D\u101A\u102C"),
+                        React.createElement("p", { style: { fontSize: 12, color: C.dimText, marginTop: 4 } }, "\u101D\u1004\u103A\u101B\u1031\u102C\u1000\u103A\u101B\u1014\u103A Login \u101C\u102D\u102F\u1021\u1015\u103A\u1015\u102B\u101E\u100A\u103A")),
+                    React.createElement("button", { type: "button", onClick: handleGoogleLogin, disabled: busy, style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 10, padding: "11px 0", fontSize: 14, fontWeight: 600, border: `1px solid ${C.fieldBorder}`, cursor: busy ? "default" : "pointer", background: C.fieldBg, color: C.cream, opacity: busy ? 0.6 : 1 } },
+                        React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 48 48" },
+                            React.createElement("path", { fill: "#FFC107", d: "M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l6-6C34.5 5.6 29.5 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5 44.5 35.3 44.5 24c0-1.2-.1-2.4-.4-3.5z" }),
+                            React.createElement("path", { fill: "#FF3D00", d: "m6.3 14.7 6.6 4.8C14.6 15.9 19 13.5 24 13.5c3.1 0 5.9 1.2 8 3.1l6-6C34.5 6.6 29.5 4.5 24 4.5 15.6 4.5 8.4 9.4 6.3 14.7z" }),
+                            React.createElement("path", { fill: "#4CAF50", d: "M24 44.5c5.4 0 10.3-2.1 13.9-5.4l-6.4-5.4C29.5 35.4 26.9 36.5 24 36.5c-5.3 0-9.7-3.1-11.3-7.9l-6.5 5C8.3 39.5 15.6 44.5 24 44.5z" }),
+                            React.createElement("path", { fill: "#1976D2", d: "M43.6 20.5H42V20H24v8h11.3c-1 3-3.1 5.5-5.9 7l6.4 5.4C39.6 37 44.5 31 44.5 24c0-1.2-.1-2.4-.4-3.5z" })),
+                        "Google \u1016\u103C\u1004\u1037\u103A \u101D\u1004\u103A\u1019\u100A\u103A"),
+                    React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, margin: "18px 0" } },
+                        React.createElement("div", { style: { flex: 1, height: 1, background: C.panelBorder } }),
+                        React.createElement("span", { style: { fontSize: 11, color: C.faintText } }, "\u101E\u102D\u102F\u1037\u1019\u101F\u102F\u1010\u103A"),
+                        React.createElement("div", { style: { flex: 1, height: 1, background: C.panelBorder } })),
+                    React.createElement("form", { onSubmit: handleLogin, style: { display: "flex", flexDirection: "column", gap: 12 } },
+                        React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+                            React.createElement(Label, null, "Email"),
+                            React.createElement("div", { style: { borderRadius: 10, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg } },
+                                React.createElement("input", { type: "email", value: email, onChange: (e) => setEmail(e.target.value), autoCapitalize: "none", style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "10px 12px", color: C.cream, fontSize: 15 } }))),
+                        React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 4 } },
+                            React.createElement(Label, null, "Password"),
+                            React.createElement("div", { style: { borderRadius: 10, border: `1px solid ${C.fieldBorder}`, background: C.fieldBg } },
+                                React.createElement("input", { type: "password", value: password, onChange: (e) => setPassword(e.target.value), style: { width: "100%", background: "transparent", border: "none", outline: "none", padding: "10px 12px", color: C.cream, fontSize: 15 } }))),
+                        error && React.createElement("div", { style: { color: C.danger, fontSize: 12, lineHeight: 1.6 } }, error),
+                        React.createElement("button", { type: "submit", disabled: busy, style: { marginTop: 4, borderRadius: 10, padding: "12px 0", fontSize: 15, fontWeight: 700, border: "none", cursor: busy ? "default" : "pointer", background: C.gold, color: "#1a1610", opacity: busy ? 0.6 : 1 } }, busy ? "ဝင်နေသည်..." : "ဝင်မည်")),
+                    React.createElement(TelegramContact, null))));
+        }
+        return (React.createElement("div", { style: { position: "relative" } },
+            access.admin && (React.createElement("button", { onClick: () => setShowUsers(true), style: { position: "fixed", top: 10, left: 10, zIndex: 50, borderRadius: 8, padding: "6px 10px", fontSize: 11, border: `1px solid ${C.fieldBorder}`, background: C.panel, color: C.gold, cursor: "pointer" } }, "\uD83D\uDC64 \u1021\u101E\u102F\u1036\u1038\u1015\u103C\u102F\u101E\u1030")),
+            React.createElement("button", { onClick: handleLogout, style: { position: "fixed", top: 10, right: 10, zIndex: 50, borderRadius: 8, padding: "6px 12px", fontSize: 12, border: `1px solid ${C.fieldBorder}`, background: C.panel, color: C.mutedText, cursor: "pointer" } }, "\u238B \u1011\u103D\u1000\u103A\u1019\u100A\u103A"),
+            React.createElement(App, null),
+            showUsers && access.admin && (React.createElement(UserManager, { currentUser: user, onClose: () => setShowUsers(false) }))));
+    }
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(AuthGate, null));
+    
+  } catch (err) {
+    console.error("PST app startup error", err);
+    showStartupError(err);
+  }
+})();
+</script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+      registrations.forEach(function (registration) { registration.unregister(); });
+    }).catch(function () {});
+  }
+</script>
+</body>
+</html>
