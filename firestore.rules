@@ -1,0 +1,141 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid))
+             .data.get('active', false) == true
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid))
+             .data.get('role', '') == 'admin';
+    }
+
+    function isAllowedUser() {
+      let email = signedIn()
+        ? request.auth.token.get('email', '')
+        : '';
+
+      return signedIn()
+        && email != ''
+        && request.auth.token.get('email_verified', false) == true
+        && exists(/databases/$(database)/documents/allowedEmails/$(email))
+        && get(/databases/$(database)/documents/allowedEmails/$(email))
+             .data.get('active', false) == true;
+    }
+
+    function canUseApp() {
+      return isAdmin() || isAllowedUser();
+    }
+
+    match /admins/{uid} {
+      allow get: if signedIn()
+        && (request.auth.uid == uid || isAdmin());
+
+      allow list: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'email', 'active', 'role', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasAll([
+          'email', 'active', 'role', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.active is bool
+        && request.resource.data.role == 'admin'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdBy is string
+        && request.resource.data.get('updatedAt', request.time) is timestamp
+        && request.resource.data.get('updatedBy', '') is string;
+
+      allow update: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'email', 'active', 'role', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasAll([
+          'email', 'active', 'role', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.active is bool
+        && request.resource.data.role == 'admin'
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.get('updatedAt', request.time) is timestamp
+        && request.resource.data.get('updatedBy', '') is string;
+
+      allow delete: if isAdmin();
+    }
+
+    match /allowedEmails/{emailId} {
+      allow get: if isAdmin()
+        || (
+          signedIn()
+          && request.auth.token.get('email', '') == emailId
+        );
+
+      allow list: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'email', 'active', 'role', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasAll([
+          'email', 'active', 'role', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.email == emailId
+        && request.resource.data.email is string
+        && request.resource.data.active is bool
+        && request.resource.data.role in ['user', 'admin']
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdBy is string
+        && request.resource.data.get('updatedAt', request.time) is timestamp
+        && request.resource.data.get('updatedBy', '') is string;
+
+      allow update: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'email', 'active', 'role', 'createdAt', 'createdBy',
+          'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasAll([
+          'email', 'active', 'role', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.email == emailId
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.email is string
+        && request.resource.data.active is bool
+        && request.resource.data.role in ['user', 'admin']
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.get('updatedAt', request.time) is timestamp
+        && request.resource.data.get('updatedBy', '') is string;
+
+      allow delete: if isAdmin();
+    }
+
+    match /userData/{uid}/{document=**} {
+      allow read, write: if isAdmin()
+        || (
+          canUseApp()
+          && request.auth.uid == uid
+        );
+    }
+
+    match /appData/{document=**} {
+      allow read: if canUseApp();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
